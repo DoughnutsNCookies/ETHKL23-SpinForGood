@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import ButtonMarquee from "./ButtonMarquee";
-import Roulette from "./Roulette";
+// import Roulette from "./Roulette";
 import { AnimatePresence } from "framer-motion";
-import Countdown from "react-countdown";
+import Countdown, { CountdownRenderProps } from "react-countdown";
+import { useAccount } from "wagmi";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
-const DynamicWheel = dynamic(import("~~/components/Roulette"), {
-  ssr: false,
-});
+// const DynamicWheel = dynamic(import("~~/components/Roulette"), {
+//   ssr: false,
+// });
+
+const DynamicWheel = React.lazy(() => import("~~/components/Roulette"));
 
 // Renderer callback with condition
-const renderer = ({ days, hours, minutes, seconds, completed }) => {
+const renderer = ({ days, hours, minutes, seconds, completed }: CountdownRenderProps) => {
   if (completed) {
     // Render a completed state
     return <></>;
@@ -41,9 +44,11 @@ const renderer = ({ days, hours, minutes, seconds, completed }) => {
 };
 
 export default function CustomCountdown() {
-  const [date, setDate] = useState<Date | number>(new Date(1697353200000));
+  const [date, setDate] = useState<Date | number>(new Date(1697709600000));
   const [show, setShow] = useState(false);
   const [key, setKey] = useState(0);
+
+  const { address } = useAccount();
 
   const { writeAsync } = useScaffoldContractWrite({
     contractName: "SFGContract",
@@ -53,23 +58,27 @@ export default function CustomCountdown() {
   return (
     <div className="my-10 mb-14 max-w-max flex flex-col justify-center items-center">
       <p className="text-3xl font-bold mb-6">To the next Roulette⏳</p>
+      {}
       <Countdown
         key={key}
         date={date}
         renderer={renderer}
         onComplete={() => {
           setShow(true);
-          setDate(new Date(1697353200000));
+          setDate(new Date(1697709600000));
           setKey(x => (x += 1));
         }}
       />
-      <ButtonMarquee
-        onClick={() => {
-          writeAsync();
-          setDate(Date.now() + 3000);
-        }}
-        text="Now"
-      />
+      {address === "0xD368538Bef5733B04E40a9A96e3af931aD1617d1" && (
+        <ButtonMarquee
+          onClick={() => {
+            writeAsync();
+            setDate(Date.now() + 3000);
+          }}
+          text="Now"
+        />
+      )}
+
       <AnimatePresence>{show && <DynamicWheel setShow={setShow} />}</AnimatePresence>
     </div>
   );
